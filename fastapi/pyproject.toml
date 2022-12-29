@@ -1,3 +1,25 @@
+[tool.poetry]
+name = "to-do-lists"
+version = "0.1.0"
+description = ""
+authors = ["Nakamura Yuji <pooh.voxx@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.11"
+fastapi = "^0.88.0"
+uvicorn = {extras = ["standard"], version = "^0.20.0"}
+sqlalchemy = "^1.4.45"
+taskipy = "^1.10.3"
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.12.0"
+pyproject-flake8 = "^6.0.0.post1"
+isort = "^5.11.4"
+
+[tool.taskipy.tasks]
+dev = "uvicorn todo.main:app --reload"
+check = "isort . & black . & pflake8"
+
 [tool.black]
 line-length = 79
 target-version = ["py39"]
@@ -11,3 +33,7 @@ exclude = "venv"
 [tool.isort]
 profile = "black"
 line_length = "79"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
