@@ -28,8 +28,12 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     return db_user
 
 
-def update_user(db: Session, user: schemas.UserUpdate) -> models.User:
-    db_user = get_user(db=db, user_id=user.id)
+def update_user(
+    db: Session,
+    user_id: int,
+    user: schemas.UserCreate,
+) -> models.User:
+    db_user = get_user(db=db, user_id=user_id)
     db_user.name = user.name
     db_user.email = user.email
     db_user.password = user.hashlib.sha512(user.password).hexdigest()
@@ -48,17 +52,28 @@ def delete_user(db: Session, user_id: int) -> models.User:
 
 def get_tasks(
     db: Session,
+    owner_id: int,
     skip: int = 0,
     limit: int = 100,
 ) -> list[models.Task]:
-    return db.query(models.Task).offset(skip).limit(limit).all()
+    return (
+        db.query(models.Task)
+        .filter(owner_id=owner_id)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
 
 
 def get_task(db: Session, task_id: int) -> models.Task:
     return db.query(models.Task).filter(models.Task.id == task_id).first()
 
 
-def create_task(db: Session, task: schemas.TaskCreate, user_id: int) -> models.Task:
+def create_task(
+    db: Session,
+    task: schemas.TaskCreate,
+    user_id: int,
+) -> models.Task:
     db_task = models.Task(**task.dict(), owner_id=user_id)
     db.add(db_task)
     db.commit()
@@ -66,8 +81,13 @@ def create_task(db: Session, task: schemas.TaskCreate, user_id: int) -> models.T
     return db_task
 
 
-def update_task(db: Session, task: schemas.taskUpdate, user_id: int) -> models.Task:
-    db_task = get_task(db=db, task_id=task.id)
+def update_task(
+    db: Session,
+    task_id: int,
+    task: schemas.taskCreate,
+    user_id: int,
+) -> models.Task:
+    db_task = get_task(db=db, task_id=task_id)
     db_task.title = task.title
     db_task.owner_id = user_id
     db.commit()
