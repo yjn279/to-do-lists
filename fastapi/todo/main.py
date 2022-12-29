@@ -19,22 +19,22 @@ def get_db():
         db.close()
 
 
-@app.get("/users/", response_model=list[schemas.User])
+@app.get("/users/", response_model=list[schemas.UserGet])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_users(db, skip=skip, limit=limit)
 
 
-@app.post("/users/", response_model=schemas.User)
+@app.post("/users/", response_model=schemas.UserGet)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db=db, user=user)
 
 
-@app.get("/users/{user_id}", response_model=schemas.User)
+@app.get("/users/{user_id}", response_model=schemas.UserGet)
 def read_user(user_id: int, db: Session = Depends(get_db)):
     return crud.get_user(db, user_id=user_id)
 
 
-@app.put("/users/{user_id}", response_model=schemas.User)
+@app.put("/users/{user_id}", response_model=schemas.UserGet)
 def update_user(
     user_id,
     user: schemas.UserCreate,
@@ -43,12 +43,12 @@ def update_user(
     return crud.update_user(db, user_id=user_id, user=user)
 
 
-@app.delete("/users/{user_id}", response_model=schemas.User)
+@app.delete("/users/{user_id}", response_model=schemas.UserGet)
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     return crud.delete_user(db, user_id=user_id)
 
 
-@app.get("/users/{user_id}/tasks/", response_model=list[schemas.Task])
+@app.get("/users/{user_id}/tasks/", response_model=list[schemas.TaskGet])
 def read_tasks(
     user_id: int,
     skip: int = 0,
@@ -58,7 +58,7 @@ def read_tasks(
     return crud.get_tasks(db, owner_id=user_id, skip=skip, limit=limit)
 
 
-@app.post("/users/{user_id}/tasks/", response_model=schemas.Task)
+@app.post("/users/{user_id}/tasks/", response_model=schemas.TaskGet)
 def create_task(
     user_id: int,
     task: schemas.TaskCreate,
@@ -67,12 +67,12 @@ def create_task(
     return crud.create_task(db=db, task=task, user_id=user_id)
 
 
-@app.get("/users/{user_id}/tasks/{task_id}", response_model=schemas.Task)
+@app.get("/users/{user_id}/tasks/{task_id}", response_model=schemas.TaskGet)
 def read_task(user_id: int, task_id: int, db: Session = Depends(get_db)):
     return crud.get_task(db, task_id=task_id)
 
 
-@app.put("/users/{user_id}/tasks/{task_id}", response_model=schemas.Task)
+@app.put("/users/{user_id}/tasks/{task_id}", response_model=schemas.TaskGet)
 def update_task(
     user_id: int,
     task_id: int,
@@ -82,6 +82,6 @@ def update_task(
     return crud.update_task(db, task_id=task_id, task=task, user_id=user_id)
 
 
-@app.delete("/users/{user_id}/tasks/{task_id}", response_model=schemas.Task)
+@app.delete("/users/{user_id}/tasks/{task_id}", response_model=schemas.TaskGet)
 def delete_task(user_id: int, task_id: int, db: Session = Depends(get_db)):
     return crud.delete_task(db, task_id=task_id)

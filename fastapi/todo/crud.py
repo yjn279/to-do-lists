@@ -84,7 +84,7 @@ def create_task(
 def update_task(
     db: Session,
     task_id: int,
-    task: schemas.taskCreate,
+    task: schemas.TaskCreate,
     user_id: int,
 ) -> models.Task:
     db_task = get_task(db=db, task_id=task_id)
