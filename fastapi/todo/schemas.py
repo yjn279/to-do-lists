@@ -12,13 +12,11 @@ class TaskGet(BaseModel):
 
 class TaskCreate(BaseModel):
     title: str
-    owner_id: int
 
 
 class TaskUpdate(BaseModel):
     id: int
     title: str
-    owner_id: int
 
 
 class TaskDelete(BaseModel):
