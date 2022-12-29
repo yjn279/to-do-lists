@@ -1,3 +1,5 @@
+import hashlib
+
 from sqlalchemy.orm import Session
 
 from . import models, schemas
@@ -18,7 +20,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 def create_user(db: Session, user: schemas.UserCreate):
     db_user = models.User(
         email=user.email,
-        password=user.password + "notreallyhashed",
+        password=hashlib.sha512(user.password).hexdigest(),
     )
     db.add(db_user)
     db.commit()
