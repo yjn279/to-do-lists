@@ -48,3 +48,6 @@ class UserUpdate(BaseModel):
 
 class UserDelete(BaseModel):
     id: int
+
+    class Config:
+        orm_mode = True

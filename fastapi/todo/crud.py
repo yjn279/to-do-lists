@@ -5,12 +5,16 @@ from sqlalchemy.orm import Session
 from . import models, schemas
 
 
+def hash(password: str) -> str:
+    return hashlib.sha512(password.encode('utf-8')).hexdigest()
+
+
 def get_users(
     db: Session,
     skip: int = 0,
     limit: int = 100,
 ) -> list[models.User]:
-    return db.query(models.Use).offset(skip).limit(limit).all()
+    return db.query(models.User).offset(skip).limit(limit).all()
 
 
 def get_user(db: Session, user_id: int) -> models.User:
@@ -19,8 +23,9 @@ def get_user(db: Session, user_id: int) -> models.User:
 
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     db_user = models.User(
-        **user.dict(),
-        password=hashlib.sha512(user.password).hexdigest(),
+        name=user.name,
+        email=user.email,
+        password=hash(user.password),
     )
     db.add(db_user)
     db.commit()
@@ -36,7 +41,7 @@ def update_user(
     db_user = get_user(db=db, user_id=user_id)
     db_user.name = user.name
     db_user.email = user.email
-    db_user.password = user.hashlib.sha512(user.password).hexdigest()
+    db_user.password = hash(user.password)
     db.commit()
     db.refresh(db_user)
     return db_user
@@ -46,7 +51,6 @@ def delete_user(db: Session, user_id: int) -> models.User:
     db_user = get_user(db=db, user_id=user_id)
     db.delete(db_user)
     db.commit()
-    db.refresh(db_user)
     return db_user
 
 
