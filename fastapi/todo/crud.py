@@ -6,7 +6,7 @@ from . import models, schemas
 
 
 def hash(password: str) -> str:
-    return hashlib.sha512(password.encode('utf-8')).hexdigest()
+    return hashlib.sha512(password.encode("utf-8")).hexdigest()
 
 
 def get_users(
@@ -62,7 +62,7 @@ def get_tasks(
 ) -> list[models.Task]:
     return (
         db.query(models.Task)
-        .filter(owner_id=owner_id)
+        .filter(models.Task.owner_id == owner_id)
         .offset(skip)
         .limit(limit)
         .all()
@@ -103,5 +103,4 @@ def delete_task(db: Session, task_id: int) -> models.Task:
     db_task = get_task(db=db, task_id=task_id)
     db.delete(db_task)
     db.commit()
-    db.refresh(db_task)
     return db_task
