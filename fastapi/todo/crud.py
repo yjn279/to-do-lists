@@ -1,12 +1,13 @@
-import hashlib
-
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from . import models, schemas
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def hash(password: str) -> str:
-    return hashlib.sha512(password.encode("utf-8")).hexdigest()
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
 
 
 def get_users(
@@ -21,11 +22,15 @@ def get_user(db: Session, user_id: int) -> models.User:
     return db.query(models.User).filter(models.User.id == user_id).first()
 
 
+def get_user_by_email(db: Session, email: str) -> models.User:
+    return db.query(models.User).filter(models.User.email == email).first()
+
+
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     db_user = models.User(
         name=user.name,
         email=user.email,
-        password=hash(user.password),
+        password=get_password_hash(user.password),
     )
     db.add(db_user)
     db.commit()
@@ -41,7 +46,7 @@ def update_user(
     db_user = get_user(db=db, user_id=user_id)
     db_user.name = user.name
     db_user.email = user.email
-    db_user.password = hash(user.password)
+    db_user.password = get_password_hash(user.password)
     db.commit()
     db.refresh(db_user)
     return db_user
