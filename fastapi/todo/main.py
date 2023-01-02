@@ -21,6 +21,12 @@ access_token_expire_minutes = int(
 )
 
 
+credentials_exception = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Could not validate credentials",
+    headers={"WWW-Authenticate": "Bearer"},
+)
+
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -83,7 +89,7 @@ async def get_current_user(
     return user
 
 
-@app.post("/token", response_model=schemas.Token)
+@app.post("/token/", response_model=schemas.Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
@@ -102,18 +108,12 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.get("/users/", response_model=list[schemas.UserGet])
-async def read_users(
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme),
-):
-    return crud.get_users(db, skip=skip, limit=limit)
-
-
 @app.post("/users/", response_model=schemas.UserGet)
-async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def create_user(
+    user: schemas.UserCreate,
+    db: Session = Depends(get_db),
+):
+    user.password = pwd_context.hash(user.password)
     return crud.create_user(db=db, user=user)
 
 
@@ -124,56 +124,64 @@ async def read_users_me(
     return current_user
 
 
-@app.get("/users/{user_id}", response_model=schemas.UserGet)
-async def read_user(user_id: int, db: Session = Depends(get_db)):
-    return crud.get_user(db, user_id=user_id)
-
-
-@app.put("/users/{user_id}", response_model=schemas.UserGet)
+@app.put("/users/me", response_model=schemas.UserGet)
 async def update_user(
-    user_id,
-    user: schemas.UserCreate,
     db: Session = Depends(get_db),
+    current_user: schemas.UserGet = Depends(get_current_user),
 ):
-    return crud.update_user(db, user_id=user_id, user=user)
+    return crud.update_user(db, user=current_user)
 
 
-@app.delete("/users/{user_id}", response_model=schemas.UserGet)
-async def delete_user(user_id: int, db: Session = Depends(get_db)):
-    return crud.delete_user(db, user_id=user_id)
+@app.delete("/users/me", response_model=schemas.UserGet)
+async def delete_user(
+    db: Session = Depends(get_db),
+    current_user: schemas.UserGet = Depends(get_current_user),
+):
+    return crud.delete_user(db, user_id=current_user.id)
 
 
 @app.get("/tasks/", response_model=list[schemas.TaskGet])
 async def read_tasks(
-    skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: schemas.UserGet = Depends(get_current_user),
 ):
-    user_id = 1
-    return crud.get_tasks(db, owner_id=user_id, skip=skip, limit=limit)
+    return crud.get_tasks(db, owner_id=current_user.id, skip=skip, limit=limit)
 
 
 @app.post("/tasks/", response_model=schemas.TaskGet)
-async def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
-    user_id = 1
-    return crud.create_task(db=db, task=task, user_id=user_id)
+async def create_task(
+    task: schemas.TaskCreate,
+    db: Session = Depends(get_db),
+    current_user: schemas.UserGet = Depends(get_current_user),
+):
+    return crud.create_task(db=db, task=task)
 
 
 @app.get("/tasks/{task_id}", response_model=schemas.TaskGet)
-async def read_task(task_id: int, db: Session = Depends(get_db)):
-    # user_id = 1
+async def read_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: schemas.UserGet = Depends(get_current_user),
+):
     return crud.get_task(db, task_id=task_id)
 
 
 @app.put("/tasks/{task_id}", response_model=schemas.TaskGet)
 async def update_task(
     task_id: int,
-    task: schemas.TaskCreate,
+    task: schemas.TaskUpdate,
     db: Session = Depends(get_db),
+    current_user: schemas.UserGet = Depends(get_current_user),
 ):
-    user_id = 1
-    return crud.update_task(db, task_id=task_id, task=task, user_id=user_id)
+    return crud.update_task(db, task=task)
 
 
 @app.delete("/tasks/{task_id}", response_model=schemas.TaskGet)
-async def delete_task(task_id: int, db: Session = Depends(get_db)):
-    # user_id = 1
+async def delete_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: schemas.UserGet = Depends(get_current_user),
+):
     return crud.delete_task(db, task_id=task_id)
