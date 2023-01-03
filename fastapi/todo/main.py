@@ -90,7 +90,7 @@ async def get_current_user(
     return user
 
 
-@app.post("/token/", response_model=schemas.Token)
+@app.post("/token/", response_model=schemas.Token, summary="Get a JWT token")
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
@@ -109,7 +109,12 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.post("/users/", response_model=schemas.User)
+@app.post(
+    "/users/",
+    response_model=schemas.User,
+    tags=["users"],
+    summary="Create a user",
+)
 async def create_user(
     user: schemas.UserCreate,
     db: Session = Depends(get_db),
@@ -121,14 +126,24 @@ async def create_user(
     return crud.create_user(db=db, user=user)
 
 
-@app.get("/users/me/", response_model=schemas.User)
+@app.get(
+    "/users/me/",
+    response_model=schemas.User,
+    tags=["users"],
+    summary="Get a user",
+)
 async def read_user(
     current_user: schemas.User = Depends(get_current_user),
 ):
     return current_user
 
 
-@app.put("/users/me", response_model=schemas.User)
+@app.put(
+    "/users/me",
+    response_model=schemas.User,
+    tags=["users"],
+    summary="Update a user",
+)
 async def update_user(
     user: schemas.UserCreate,
     db: Session = Depends(get_db),
@@ -140,7 +155,12 @@ async def update_user(
     return crud.update_user(db, user_id=current_user.id, user=user)
 
 
-@app.delete("/users/me", response_model=schemas.User)
+@app.delete(
+    "/users/me",
+    response_model=schemas.User,
+    tags=["users"],
+    summary="Delete a user",
+)
 async def delete_user(
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(get_current_user),
@@ -148,7 +168,12 @@ async def delete_user(
     return crud.delete_user(db, user_id=current_user.id)
 
 
-@app.get("/tasks/", response_model=list[schemas.Task])
+@app.get(
+    "/tasks/",
+    response_model=list[schemas.Task],
+    tags=["tasks"],
+    summary="Get tasks",
+)
 async def read_tasks(
     skip: int = 0,
     limit: int = 100,
@@ -160,7 +185,12 @@ async def read_tasks(
     )
 
 
-@app.post("/tasks/", response_model=schemas.Task)
+@app.post(
+    "/tasks/",
+    response_model=schemas.Task,
+    tags=["tasks"],
+    summary="Create a task",
+)
 async def create_task(
     task: schemas.TaskCreate,
     db: Session = Depends(get_db),
@@ -169,7 +199,12 @@ async def create_task(
     return crud.create_task(db, owner_id=current_user.id, task=task)
 
 
-@app.get("/tasks/{task_id}", response_model=schemas.Task)
+@app.get(
+    "/tasks/{task_id}",
+    response_model=schemas.Task,
+    tags=["tasks"],
+    summary="Get a task",
+)
 async def read_task(
     task_id: int,
     db: Session = Depends(get_db),
@@ -183,7 +218,12 @@ async def read_task(
     return db_task
 
 
-@app.put("/tasks/{task_id}", response_model=schemas.Task)
+@app.put(
+    "/tasks/{task_id}",
+    response_model=schemas.Task,
+    tags=["tasks"],
+    summary="Update a task",
+)
 async def update_task(
     task_id: int,
     task: schemas.TaskCreate,
@@ -203,7 +243,12 @@ async def update_task(
     )
 
 
-@app.delete("/tasks/{task_id}", response_model=schemas.Task)
+@app.delete(
+    "/tasks/{task_id}",
+    response_model=schemas.Task,
+    tags=["tasks"],
+    summary="Delete a task",
+)
 async def delete_task(
     task_id: int,
     db: Session = Depends(get_db),
