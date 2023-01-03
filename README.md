@@ -1,28 +1,7 @@
 # todos
 
-## Requirements
-以下のコマンドを実行して環境を構築する。
-```
-python3 -m venv venv
-pip install --upgreade pip
-pip install poetry
-poetry install 
-```
+## Python
 
-`.env.sample`ファイルにならって`.env`ファイルを作成する。
-`SECRET_KEY`は以下のコマンドで生成できる。
-```
-openssl rand -hex 32
-```
-
-
-## Getting started
-サーバーの起動
-```
-poetry run task dev
-```
-
-Lint & Format
-```
-poetry run task check
-```
+### [FastAPI](fastapi/README.md)
+PythonでAPIを提供するためのフレームワーク。
+実行速度が速く型安全である。
