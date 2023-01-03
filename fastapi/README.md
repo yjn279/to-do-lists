@@ -26,3 +26,10 @@ Lint & Format
 ```
 poetry run task check
 ```
+
+OpenAPI ドキュメント
+http://127.0.0.1:8000/docs
+
+## References
+- [FastAPI](https://fastapi.tiangolo.com/ja/)
+- [FastAPIを勉強する](https://zenn.dev/yuji207/scraps/4ab2fdb73ae232)
