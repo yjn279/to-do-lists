@@ -12,7 +12,7 @@ class TokenData(BaseModel):
     email: Union[str, None] = None
 
 
-class TaskGet(BaseModel):
+class Task(BaseModel):
     id: int
     title: str
     owner_id: int
@@ -23,24 +23,13 @@ class TaskGet(BaseModel):
 
 class TaskCreate(BaseModel):
     title: str
-    owner_id: int
 
 
-class TaskUpdate(BaseModel):
-    id: int
-    title: str
-    owner_id: int
-
-
-class TaskDelete(BaseModel):
-    id: int
-
-
-class UserGet(BaseModel):
+class User(BaseModel):
     id: int
     name: str
     email: str
-    tasks: list[TaskGet] = []
+    tasks: list[Task] = []
 
     class Config:
         orm_mode = True
@@ -50,17 +39,3 @@ class UserCreate(BaseModel):
     name: str
     email: str
     password: str
-
-
-class UserUpdate(BaseModel):
-    id: int
-    name: str
-    email: str
-    password: str
-
-
-class UserDelete(BaseModel):
-    id: int
-
-    class Config:
-        orm_mode = True

@@ -16,9 +16,8 @@ from .database import SessionLocal, engine
 load_dotenv(".env")
 secret_key = os.environ.get("SECRET_KEY")
 algorithm = os.environ.get("ALGORITHM")
-access_token_expire_minutes = int(
-    os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES")
-)
+access_token_expire_minutes = os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES")
+access_token_expire_minutes = int(access_token_expire_minutes)
 
 
 credentials_exception = HTTPException(
@@ -55,7 +54,8 @@ def authenticate_user(email: str, password: str, db: Session):
 
 
 def create_access_token(
-    data: dict, expires_delta: Union[timedelta, None] = None
+    data: dict,
+    expires_delta: Union[timedelta, None] = None,
 ):
     to_encode = data.copy()
     if expires_delta:
@@ -68,7 +68,8 @@ def create_access_token(
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -108,80 +109,109 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.post("/users/", response_model=schemas.UserGet)
+@app.post("/users/", response_model=schemas.User)
 async def create_user(
     user: schemas.UserCreate,
     db: Session = Depends(get_db),
 ):
+    db_user = crud.get_user_by_email(db, email=user.email)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
     user.password = pwd_context.hash(user.password)
     return crud.create_user(db=db, user=user)
 
 
-@app.get("/users/me/", response_model=schemas.UserGet)
-async def read_users_me(
-    current_user: schemas.UserGet = Depends(get_current_user),
+@app.get("/users/me/", response_model=schemas.User)
+async def read_user(
+    current_user: schemas.User = Depends(get_current_user),
 ):
     return current_user
 
 
-@app.put("/users/me", response_model=schemas.UserGet)
+@app.put("/users/me", response_model=schemas.User)
 async def update_user(
+    user: schemas.UserCreate,
     db: Session = Depends(get_db),
-    current_user: schemas.UserGet = Depends(get_current_user),
+    current_user: schemas.User = Depends(get_current_user),
 ):
-    return crud.update_user(db, user=current_user)
+    db_user = crud.get_user_by_email(db, email=user.email)
+    if db_user and db_user.id != current_user.id:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    return crud.update_user(db, user_id=current_user.id, user=user)
 
 
-@app.delete("/users/me", response_model=schemas.UserGet)
+@app.delete("/users/me", response_model=schemas.User)
 async def delete_user(
     db: Session = Depends(get_db),
-    current_user: schemas.UserGet = Depends(get_current_user),
+    current_user: schemas.User = Depends(get_current_user),
 ):
     return crud.delete_user(db, user_id=current_user.id)
 
 
-@app.get("/tasks/", response_model=list[schemas.TaskGet])
+@app.get("/tasks/", response_model=list[schemas.Task])
 async def read_tasks(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: schemas.UserGet = Depends(get_current_user),
+    current_user: schemas.User = Depends(get_current_user),
 ):
-    return crud.get_tasks(db, owner_id=current_user.id, skip=skip, limit=limit)
+    return crud.get_tasks_by_owner_id(
+        db, owner_id=current_user.id, skip=skip, limit=limit
+    )
 
 
-@app.post("/tasks/", response_model=schemas.TaskGet)
+@app.post("/tasks/", response_model=schemas.Task)
 async def create_task(
     task: schemas.TaskCreate,
     db: Session = Depends(get_db),
-    current_user: schemas.UserGet = Depends(get_current_user),
+    current_user: schemas.User = Depends(get_current_user),
 ):
-    return crud.create_task(db=db, task=task)
+    return crud.create_task(db, owner_id=current_user.id, task=task)
 
 
-@app.get("/tasks/{task_id}", response_model=schemas.TaskGet)
+@app.get("/tasks/{task_id}", response_model=schemas.Task)
 async def read_task(
     task_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.UserGet = Depends(get_current_user),
+    current_user: schemas.User = Depends(get_current_user),
 ):
-    return crud.get_task(db, task_id=task_id)
+    db_task = crud.get_task_by_owner_id(
+        db, task_id=task_id, owner_id=current_user.id
+    )
+    if db_task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return db_task
 
 
-@app.put("/tasks/{task_id}", response_model=schemas.TaskGet)
+@app.put("/tasks/{task_id}", response_model=schemas.Task)
 async def update_task(
     task_id: int,
-    task: schemas.TaskUpdate,
+    task: schemas.TaskCreate,
     db: Session = Depends(get_db),
-    current_user: schemas.UserGet = Depends(get_current_user),
+    current_user: schemas.User = Depends(get_current_user),
 ):
-    return crud.update_task(db, task=task)
+    db_task = crud.get_task_by_owner_id(
+        db, task_id=task_id, owner_id=current_user.id
+    )
+    if db_task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return crud.update_task(
+        db,
+        task_id=task_id,
+        owner_id=current_user.id,
+        task=task,
+    )
 
 
-@app.delete("/tasks/{task_id}", response_model=schemas.TaskGet)
+@app.delete("/tasks/{task_id}", response_model=schemas.Task)
 async def delete_task(
     task_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.UserGet = Depends(get_current_user),
+    current_user: schemas.User = Depends(get_current_user),
 ):
+    db_task = crud.get_task_by_owner_id(
+        db, task_id=task_id, owner_id=current_user.id
+    )
+    if db_task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
     return crud.delete_task(db, task_id=task_id)
