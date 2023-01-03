@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from . import models, schemas
@@ -29,7 +31,11 @@ def create_user(
     db: Session,
     user: schemas.UserCreate,
 ) -> models.User:
-    db_user = models.User(**user.dict())
+    db_user = models.User(
+        **user.dict(),
+        created=datetime.now(),
+        edited=datetime.now(),
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -44,7 +50,7 @@ def update_user(
     db_user = get_user(db=db, user_id=user_id)
     db_user.name = user.name
     db_user.email = user.email
-    db_user.password = user.password
+    db_user.edited = datetime.now()
     db.commit()
     db.refresh(db_user)
     return db_user
@@ -102,7 +108,12 @@ def create_task(
     owner_id,
     task: schemas.TaskCreate,
 ) -> models.Task:
-    db_task = models.Task(**task.dict(), owner_id=owner_id)
+    db_task = models.Task(
+        **task.dict(),
+        owner_id=owner_id,
+        created=datetime.now(),
+        edited=datetime.now(),
+    )
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
@@ -117,9 +128,13 @@ def update_task(
 ) -> models.Task:
     db_task = get_task(db=db, task_id=task_id)
     db_task.title = task.title
+    db_task.description = task.description
+    db_task.done = task.done
     db_task.owner_id = owner_id
+    db_task.edited = datetime.now()
     db.commit()
     db.refresh(db_task)
+    print(db_task)
     return db_task
 
 

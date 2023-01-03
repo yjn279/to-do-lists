@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Union
 
 from pydantic import BaseModel
@@ -15,7 +16,11 @@ class TokenData(BaseModel):
 class Task(BaseModel):
     id: int
     title: str
+    description: str
+    done: bool
     owner_id: int
+    created: datetime
+    edited: datetime
 
     class Config:
         orm_mode = True
@@ -23,6 +28,8 @@ class Task(BaseModel):
 
 class TaskCreate(BaseModel):
     title: str
+    description: str
+    done: bool
 
 
 class User(BaseModel):
@@ -30,6 +37,8 @@ class User(BaseModel):
     name: str
     email: str
     tasks: list[Task] = []
+    created: datetime
+    edited: datetime
 
     class Config:
         orm_mode = True
