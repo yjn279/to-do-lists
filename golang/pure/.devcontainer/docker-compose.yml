@@ -1,0 +1,8 @@
+version: '3'
+services:
+  golang-pure:
+    image: golang
+    volumes:
+      - ../pure:/workspace/pure
+    stdin_open: true
+    tty: true
