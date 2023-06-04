@@ -3,6 +3,6 @@ services:
   golang-pure:
     image: golang
     volumes:
-      - ../pure:/workspace/pure
+      - ..:/workspace/pure
     stdin_open: true
     tty: true
