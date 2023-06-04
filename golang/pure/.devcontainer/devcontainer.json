@@ -1,6 +1,6 @@
 {
   "name": "Golang - Pure",
-	"dockerComposeFile": "docker-compose.yml",
+  "dockerComposeFile": "docker-compose.yml",
   "service": "golang-pure",
   "workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",
   "customizations": {
